@@ -138,11 +138,9 @@ export const DepositReceiptList: React.FC<DepositReceiptListProps> = ({ currentU
             Sistema con validación anti-fraude automática
           </p>
         </div>
-        {onAdd && (
-          <Button onClick={onAdd}>
-            + Nueva Boleta
-          </Button>
-        )}
+        <Button onClick={onAdd || (() => {})} className="bg-gold-600 hover:bg-gold-700 text-white px-6 py-2">
+          ➕ Nueva Boleta
+        </Button>
       </div>
 
       {/* Alert */}
@@ -197,12 +195,11 @@ export const DepositReceiptList: React.FC<DepositReceiptListProps> = ({ currentU
       {/* Receipt List */}
       {filteredReceipts.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">No hay boletas para mostrar</p>
-          {onAdd && (
-            <Button onClick={onAdd} className="mt-4">
-              Agregar la primera boleta
-            </Button>
-          )}
+          <div className="text-6xl mb-4">💸</div>
+          <p className="text-gray-500 text-lg mb-4">No hay boletas para mostrar</p>
+          <Button onClick={onAdd || (() => {})} className="bg-gold-600 hover:bg-gold-700 text-white px-6 py-3">
+            ➕ Agregar la primera boleta
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

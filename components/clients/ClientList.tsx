@@ -135,11 +135,9 @@ export const ClientList: React.FC<ClientListProps> = ({ currentUser, onEdit, onA
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-900">Clientes</h2>
-        {onAdd && (
-          <Button onClick={onAdd}>
-            + Nuevo Cliente
-          </Button>
-        )}
+        <Button onClick={onAdd || (() => {})} className="bg-gold-600 hover:bg-gold-700 text-white px-6 py-2">
+          ➕ Nuevo Cliente
+        </Button>
       </div>
 
       {/* Filters */}
@@ -184,12 +182,11 @@ export const ClientList: React.FC<ClientListProps> = ({ currentUser, onEdit, onA
       {/* Client List */}
       {filteredClients.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-500">No hay clientes para mostrar</p>
-          {onAdd && (
-            <Button onClick={onAdd} className="mt-4">
-              Agregar el primer cliente
-            </Button>
-          )}
+          <div className="text-6xl mb-4">📄</div>
+          <p className="text-gray-500 text-lg mb-4">No hay clientes para mostrar</p>
+          <Button onClick={onAdd || (() => {})} className="bg-gold-600 hover:bg-gold-700 text-white px-6 py-3">
+            ➕ Agregar el primer cliente
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
