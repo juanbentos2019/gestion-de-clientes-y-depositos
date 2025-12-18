@@ -132,7 +132,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       alert('Usuario creado exitosamente');
     } catch (error: any) {
       console.error('Error adding user:', error);
-      alert(`Error al crear usuario: ${error.message || 'Error desconocido'}`);
+      // Mensajes más claros para errores comunes de Firebase Auth
+      let msg = 'Error desconocido';
+      if (error?.code === 'auth/email-already-in-use') {
+        msg = 'El email ya está registrado. Use otro email o recupere la contraseña.';
+      } else if (error?.code === 'auth/invalid-email') {
+        msg = 'Email inválido';
+      } else if (error?.code === 'auth/weak-password') {
+        msg = 'La contraseña debe tener al menos 6 caracteres';
+      } else if (typeof error?.message === 'string') {
+        msg = error.message;
+      }
+      alert(`Error al crear usuario:\n\n${msg}`);
     }
   };
 
