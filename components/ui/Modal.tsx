@@ -1,5 +1,4 @@
 import React from 'react';
-import { Button } from './Button';
 
 interface ModalProps {
   isOpen: boolean;
@@ -47,10 +46,16 @@ export const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full animate-in fade-in zoom-in duration-200">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white rounded-xl shadow-2xl max-w-md w-full"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Icon Header */}
-        <div className={`flex items-center justify-center pt-8 pb-4`}>
+        <div className="flex items-center justify-center pt-8 pb-4">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center text-3xl border-2 ${getColorClass()}`}>
             {getIcon()}
           </div>
@@ -69,14 +74,21 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="px-6 pb-6">
-          <Button
+        <div className="px-6 pb-6 pt-2">
+          <button
             onClick={onClose}
-            className="w-full py-3 text-base font-semibold"
-            variant={type === 'error' ? 'danger' : 'primary'}
+            className={`w-full py-4 px-6 rounded-lg text-base font-bold transition-all duration-200 shadow-md hover:shadow-lg ${
+              type === 'error' 
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : type === 'success'
+                ? 'bg-green-600 hover:bg-green-700 text-white'
+                : type === 'warning'
+                ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }`}
           >
             {confirmText}
-          </Button>
+          </button>
         </div>
       </div>
     </div>
