@@ -304,7 +304,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
                         🗑️ Eliminar
                       </Button>
                     </div>
-                  ))}
+                  )}
                 </li>
               ))}
               </ul>
