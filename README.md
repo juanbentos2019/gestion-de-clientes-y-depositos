@@ -1,36 +1,114 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# GoldFolio CRM - Next.js + Firebase
 
-## Getting Started
+Sistema de gestión de clientes y boletas de depósito para sucursales de inversión en oro, construido con Next.js 14, TypeScript, Tailwind CSS y Firebase.
 
-First, run the development server:
+## ✨ Características Principales
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Gestión de Usuarios
+- ✅ Autenticación con Firebase Auth
+- ✅ Tres niveles de roles: **MASTER**, **ADMIN** y **USER**
+- ✅ Gestión de usuarios por sucursal
+- ✅ Cambio de contraseña seguro
+
+### Gestión de Clientes
+- ✅ Registro completo de información del cliente
+- ✅ Estados de cliente: Pendiente, Contactado, Completado, Cancelado
+- ✅ Filtrado y búsqueda de clientes
+- ✅ Asignación por sucursal
+
+### 🆕 Boletas de Depósito (NUEVA FUNCIONALIDAD)
+- ✅ Registro de depósitos bancarios
+- ✅ Información de cliente, banco, monto y moneda
+- ✅ **Validación anti-fraude**: Detecta números de operación duplicados por banco
+- ✅ Moneda de contraparte (ej: deposita ARS, compra USD)
+- ✅ Visible desde vista Master para auditoría
+
+### Arquitectura
+- ✅ Mobile-first responsive design
+- ✅ Firebase Firestore como base de datos
+- ✅ Reglas de seguridad de Firestore configuradas
+- ✅ Real-time updates
+- ✅ Escalable y optimizado
+
+## 🚀 Inicio Rápido
+
+### Prerrequisitos
+
+- Node.js 18+ instalado
+- Cuenta de Firebase
+- npm o yarn
+
+### Instalación
+
+1. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+2. **Configurar Firebase** (Ver [FIREBASE_SETUP.md](./FIREBASE_SETUP.md))
+
+3. **Configurar variables de entorno**
+   ```bash
+   cp .env.local.example .env.local
+   # Editar .env.local con tus credenciales de Firebase
+   ```
+
+4. **Ejecutar en desarrollo**
+   ```bash
+   npm run dev
+   ```
+
+5. Abre [http://localhost:3000](http://localhost:3000)
+
+## 📁 Estructura del Proyecto
+
+```
+goldfolio-crm-next/
+├── app/                     # Next.js App Router
+├── components/              # Componentes React
+│   ├── auth/               # Autenticación
+│   └── ui/                 # UI reutilizables
+├── lib/
+│   ├── context/            # React Context
+│   ├── firebase/           # Configuración Firebase
+│   └── services/           # Servicios de datos
+│       ├── depositReceiptService.ts  # ⭐ Validación anti-fraude
+└── types/                  # TypeScript types
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🔐 Validación Anti-Fraude
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+El sistema incluye validación automática de números de operación duplicados:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```typescript
+// Al registrar una boleta, el sistema verifica:
+if (existeOperacionDuplicada(banco, numeroOperacion)) {
+  // ⚠️ ALERTA: Posible fraude detectado
+  throw new Error('Número de operación ya existe para este banco');
+}
+```
 
-## Learn More
+## 🎨 Tecnologías
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 14** - Framework React
+- **TypeScript** - Tipado estático
+- **Tailwind CSS** - Estilos
+- **Firebase Auth** - Autenticación
+- **Firestore** - Base de datos
+- **React Context** - Estado global
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📱 Mobile-First
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Toda la interfaz está optimizada para dispositivos móviles con navegación táctil y diseño responsive.
 
-## Deploy on Vercel
+## 📝 Documentación Adicional
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) - Guía completa de configuración de Firebase
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🐛 Solución de Problemas
+
+Ver sección "Solución de Problemas" en [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
+
+---
+
+⭐ **Recuerda configurar Firebase antes de ejecutar!** Lee [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
