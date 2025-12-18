@@ -82,14 +82,16 @@ export const depositReceiptService = {
     try {
       const q = query(
         collection(db, DEPOSIT_RECEIPTS_COLLECTION),
-        where('branchId', '==', branchId),
-        orderBy('createdAt', 'desc')
+        where('branchId', '==', branchId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const receipts = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as DepositReceipt));
+      
+      // Ordenar en cliente para evitar necesidad de índice compuesto
+      return receipts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     } catch (error) {
       console.error('Error getting deposit receipts by branch:', error);
       throw error;
@@ -101,14 +103,16 @@ export const depositReceiptService = {
     try {
       const q = query(
         collection(db, DEPOSIT_RECEIPTS_COLLECTION),
-        where('bank', '==', bank),
-        orderBy('createdAt', 'desc')
+        where('bank', '==', bank)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const receipts = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as DepositReceipt));
+      
+      // Ordenar en cliente para evitar necesidad de índice compuesto
+      return receipts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     } catch (error) {
       console.error('Error getting deposit receipts by bank:', error);
       throw error;

@@ -40,14 +40,16 @@ export const clientService = {
     try {
       const q = query(
         collection(db, CLIENTS_COLLECTION),
-        where('branchId', '==', branchId),
-        orderBy('createdAt', 'desc')
+        where('branchId', '==', branchId)
       );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const clients = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Client));
+      
+      // Ordenar en cliente para evitar necesidad de índice compuesto
+      return clients.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
     } catch (error) {
       console.error('Error getting clients by branch:', error);
       throw error;
