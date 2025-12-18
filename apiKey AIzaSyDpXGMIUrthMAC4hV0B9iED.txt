@@ -1,0 +1,6 @@
+apiKey: "AIzaSyDpXGMIUrthMAC4hV0B9iEDZfg_10LpKg8"
+authDomain: "gestion-de-clientes-5f3f0.firebaseapp.com"
+projectId: "gestion-de-clientes-5f3f0"
+storageBucket: "gestion-de-clientes-5f3f0.firebasestorage.app"
+messagingSenderId: "255073304992"
+appId: "1:255073304992:web:a5a14cefedfaa2cce624c5"

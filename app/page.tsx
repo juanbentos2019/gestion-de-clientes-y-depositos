@@ -5,10 +5,19 @@ import { useAuth } from '@/lib/context/AuthContext';
 import { Login } from '@/components/auth/Login';
 import { Button } from '@/components/ui/Button';
 import { authService } from '@/lib/services/authService';
+import { ClientList } from '@/components/clients/ClientList';
+import { ClientForm } from '@/components/clients/ClientForm';
+import { DepositReceiptForm } from '@/components/deposits/DepositReceiptForm';
+import { DepositReceiptList } from '@/components/deposits/DepositReceiptList';
+import { AdminPanel } from '@/components/admin/AdminPanel';
+import { clientService } from '@/lib/services/clientService';
+import { depositReceiptService } from '@/lib/services/depositReceiptService';
+import { Client, DepositReceipt } from '@/types';
 
 export default function Home() {
   const { currentUser, loading } = useAuth();
-  const [view, setView] = useState<'dashboard' | 'clients' | 'deposits'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'clients' | 'deposits' | 'admin' | 'client-form' | 'deposit-form'>('dashboard');
+  const [editingClient, setEditingClient] = useState<Client | undefined>();
 
   const handleLogout = async () => {
     try {
@@ -16,6 +25,36 @@ export default function Home() {
     } catch (error) {
       console.error('Error signing out:', error);
     }
+  };
+
+  const handleSaveClient = async (client: Omit<Client, 'id'>) => {
+    try {
+      if (editingClient) {
+        await clientService.updateClient(editingClient.id, client);
+      } else {
+        await clientService.addClient(client);
+      }
+      setView('clients');
+      setEditingClient(undefined);
+    } catch (error) {
+      console.error('Error saving client:', error);
+      throw error;
+    }
+  };
+
+  const handleSaveDeposit = async (receipt: Omit<DepositReceipt, 'id'>) => {
+    try {
+      await depositReceiptService.addDepositReceipt(receipt);
+      setView('deposits');
+    } catch (error) {
+      console.error('Error saving deposit:', error);
+      throw error;
+    }
+  };
+
+  const handleEditClient = (client: Client) => {
+    setEditingClient(client);
+    setView('client-form');
   };
 
   if (loading) {
@@ -48,12 +87,17 @@ export default function Home() {
               </h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
               <div className="text-right">
                 <div className="text-sm font-medium text-gray-900">{currentUser.username}</div>
                 <div className="text-xs text-gray-500 uppercase">{currentUser.role}</div>
               </div>
-              <Button variant="ghost" onClick={handleLogout} className="text-red-500">
+              {(currentUser.role === 'MASTER' || currentUser.role === 'ADMIN') && (
+                <Button variant="secondary" onClick={() => setView('admin')} className="text-xs px-3">
+                  ⚙️
+                </Button>
+              )}
+              <Button variant="ghost" onClick={handleLogout} className="text-red-500 text-xs">
                 Salir
               </Button>
             </div>
@@ -108,39 +152,86 @@ export default function Home() {
               Sistema de gestión de clientes y boletas de depósito para sucursales de inversión en oro.
             </p>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gold-50 border border-gold-200 rounded-lg p-4">
-                <h3 className="font-semibold text-gold-900">Clientes</h3>
+              <button
+                onClick={() => setView('clients')}
+                className="bg-gold-50 border border-gold-200 rounded-lg p-4 hover:bg-gold-100 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-gold-900">👥 Clientes</h3>
                 <p className="text-sm text-gold-700 mt-1">Gestiona tu cartera de clientes</p>
-              </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-900">Boletas</h3>
+              </button>
+              <button
+                onClick={() => setView('deposits')}
+                className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition-colors text-left"
+              >
+                <h3 className="font-semibold text-blue-900">💸 Boletas</h3>
                 <p className="text-sm text-blue-700 mt-1">Registra depósitos con validación anti-fraude</p>
-              </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="font-semibold text-green-900">Reportes</h3>
-                <p className="text-sm text-green-700 mt-1">Visualiza estadísticas en tiempo real</p>
-              </div>
+              </button>
+              {(currentUser.role === 'MASTER' || currentUser.role === 'ADMIN') && (
+                <button
+                  onClick={() => setView('admin')}
+                  className="bg-green-50 border border-green-200 rounded-lg p-4 hover:bg-green-100 transition-colors text-left"
+                >
+                  <h3 className="font-semibold text-green-900">⚙️ Administración</h3>
+                  <p className="text-sm text-green-700 mt-1">Gestiona usuarios y sucursales</p>
+                </button>
+              )}
             </div>
           </div>
         )}
 
         {view === 'clients' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Gestión de Clientes</h2>
-            <p className="text-gray-600">Módulo de clientes en construcción...</p>
+          <ClientList
+            currentUser={currentUser}
+            onEdit={handleEditClient}
+            onAdd={() => {
+              setEditingClient(undefined);
+              setView('client-form');
+            }}
+          />
+        )}
+
+        {view === 'client-form' && (
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              {editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}
+            </h2>
+            <ClientForm
+              initialData={editingClient}
+              currentUser={currentUser}
+              onSave={handleSaveClient}
+              onCancel={() => {
+                setView('clients');
+                setEditingClient(undefined);
+              }}
+            />
           </div>
         )}
 
         {view === 'deposits' && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Boletas de Depósito</h2>
-            <p className="text-gray-600">Módulo de boletas en construcción...</p>
-            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-900 font-medium">
-                ⚠️ Este módulo incluye validación automática de números de operación duplicados por banco.
-              </p>
-            </div>
+          <DepositReceiptList
+            currentUser={currentUser}
+            onAdd={() => setView('deposit-form')}
+          />
+        )}
+
+        {view === 'deposit-form' && (
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">
+              Nueva Boleta de Depósito
+            </h2>
+            <DepositReceiptForm
+              currentUser={currentUser}
+              onSave={handleSaveDeposit}
+              onCancel={() => setView('deposits')}
+            />
           </div>
+        )}
+
+        {view === 'admin' && (currentUser.role === 'MASTER' || currentUser.role === 'ADMIN') && (
+          <AdminPanel
+            currentUser={currentUser}
+            onClose={() => setView('dashboard')}
+          />
         )}
       </main>
     </div>
