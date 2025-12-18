@@ -108,15 +108,11 @@ export const ClientForm: React.FC<ClientFormProps> = ({
     setError('');
     
     try {
-      const client: Omit<Client, 'id'> = {
+      // Construir objeto solo con campos que tienen valor (Firestore no acepta undefined)
+      const client: any = {
         firstName: formData.firstName,
         lastName: formData.lastName,
-        landline: formData.landline || undefined,
         mobile: formData.mobile,
-        address: formData.address || undefined,
-        email: formData.email || undefined,
-        interestType: formData.interestType || undefined,
-        investmentAmount: formData.investmentAmount ? parseFloat(formData.investmentAmount) : undefined,
         branchId: formData.branchId,
         status: formData.status,
         createdBy: currentUser.id,
@@ -124,7 +120,14 @@ export const ClientForm: React.FC<ClientFormProps> = ({
         updatedAt: Date.now()
       };
       
-      await onSave(client);
+      // Solo agregar campos opcionales si tienen valor
+      if (formData.landline?.trim()) client.landline = formData.landline;
+      if (formData.address?.trim()) client.address = formData.address;
+      if (formData.email?.trim()) client.email = formData.email;
+      if (formData.interestType?.trim()) client.interestType = formData.interestType;
+      if (formData.investmentAmount?.trim()) client.investmentAmount = parseFloat(formData.investmentAmount);
+      
+      await onSave(client as Omit<Client, 'id'>);
     } catch (err: any) {
       setError(err.message || 'Error al guardar el cliente');
     } finally {
