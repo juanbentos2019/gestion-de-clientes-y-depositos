@@ -20,6 +20,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
   
   // New branch form
   const [newBranchName, setNewBranchName] = useState('');
+  const [editingBranch, setEditingBranch] = useState<{ id: string; name: string } | null>(null);
   
   // New user form
   const [newUser, setNewUser] = useState({
@@ -29,6 +30,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     role: 'USER' as UserRole,
     branchId: ''
   });
+  const [editingUser, setEditingUser] = useState<User | null>(null);
 
   const canManageBranches = currentUser.role === 'MASTER' || currentUser.role === 'ADMIN';
   const canCreateUsers = currentUser.role === 'MASTER';
@@ -74,6 +76,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     }
   };
 
+  const handleEditBranch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBranch || !editingBranch.name.trim()) return;
+
+    try {
+      await branchService.updateBranch(editingBranch.id, { name: editingBranch.name });
+      setEditingBranch(null);
+      await loadData();
+      alert('Sucursal actualizada');
+    } catch (error) {
+      console.error('Error updating branch:', error);
+      alert('Error al actualizar sucursal');
+    }
+  };
+
   const handleDeleteBranch = async (id: string) => {
     if (!window.confirm('¿Eliminar sucursal? Los usuarios asociados quedarán sin sucursal.')) return;
 
@@ -116,6 +133,38 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     } catch (error: any) {
       console.error('Error adding user:', error);
       alert(`Error al crear usuario: ${error.message || 'Error desconocido'}`);
+    }
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    try {
+      await userService.updateUser(editingUser.id, {
+        username: editingUser.username,
+        role: editingUser.role,
+        branchId: editingUser.branchId
+      });
+      setEditingUser(null);
+      await loadData();
+      alert('Usuario actualizado');
+    } catch (error) {
+      console.error('Error updating user:', error);
+      alert('Error al actualizar usuario');
+    }
+  };
+
+  const handleDeleteUser = async (id: string) => {
+    if (!window.confirm('¿Eliminar usuario? Esta acción no se puede deshacer.')) return;
+
+    try {
+      await userService.deleteUser(id);
+      await loadData();
+      alert('Usuario eliminado');
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      alert('Error al eliminar usuario');
     }
   };
 
@@ -184,18 +233,46 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
               </p>
             )}
 
+            {editingBranch && (
+              <form onSubmit={handleEditBranch} className="bg-blue-50 p-4 rounded-lg space-y-3">
+                <h4 className="font-medium text-gray-900">Editar Sucursal</h4>
+                <div className="flex gap-3">
+                  <input
+                    required
+                    placeholder="Nombre de Sucursal"
+                    className="flex-1 p-2 border rounded"
+                    value={editingBranch.name}
+                    onChange={(e) => setEditingBranch({ ...editingBranch, name: e.target.value })}
+                  />
+                  <Button type="submit" variant="primary">Guardar</Button>
+                  <Button type="button" variant="ghost" onClick={() => setEditingBranch(null)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            )}
+
             <ul className="divide-y divide-gray-200">
               {branches.map((b) => (
                 <li key={b.id} className="py-3 flex justify-between items-center">
-                  <span className="text-gray-900">{b.name}</span>
+                  <span className="text-gray-900 font-medium">{b.name}</span>
                   {canManageBranches && (
-                    <Button
-                      variant="danger"
-                      onClick={() => handleDeleteBranch(b.id)}
-                      className="text-sm px-3 py-1"
-                    >
-                      Eliminar
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setEditingBranch({ id: b.id, name: b.name })}
+                        className="text-sm px-3 py-1"
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="danger"
+                        onClick={() => handleDeleteBranch(b.id)}
+                        className="text-sm px-3 py-1"
+                      >
+                        Eliminar
+                      </Button>
+                    </div>
                   )}
                 </li>
               ))}
@@ -256,28 +333,93 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
               <Button type="submit">Crear Usuario</Button>
             </form>
 
+            {editingUser && (
+              <form onSubmit={handleEditUser} className="bg-blue-50 p-4 rounded-lg space-y-4">
+                <h4 className="font-medium text-gray-900">Editar Usuario</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <input
+                    required
+                    type="text"
+                    placeholder="Usuario"
+                    className="p-2 border rounded"
+                    value={editingUser.username}
+                    onChange={(e) => setEditingUser({ ...editingUser, username: e.target.value })}
+                  />
+                  <select
+                    className="p-2 border rounded"
+                    value={editingUser.role}
+                    onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value as UserRole })}
+                  >
+                    <option value="USER">Usuario</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="MASTER">Master</option>
+                  </select>
+                  <select
+                    className="p-2 border rounded sm:col-span-2"
+                    value={editingUser.branchId}
+                    onChange={(e) => setEditingUser({ ...editingUser, branchId: e.target.value })}
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex gap-3">
+                  <Button type="submit" variant="primary">Guardar</Button>
+                  <Button type="button" variant="ghost" onClick={() => setEditingUser(null)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </form>
+            )}
+
             <div>
               <h3 className="font-medium text-gray-900 mb-4">Usuarios Existentes</h3>
               <ul className="divide-y divide-gray-200">
                 {users.map((u) => (
-                  <li key={u.id} className="py-3 flex justify-between items-center">
-                    <div>
-                      <div className="font-medium text-gray-900">{u.username}</div>
-                      <div className="text-sm text-gray-500">
-                        {u.email} • {u.role}
+                  <li key={u.id} className="py-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900">{u.username}</div>
+                        <div className="text-sm text-gray-500">
+                          {u.email}
+                        </div>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${
+                              u.role === 'MASTER'
+                                ? 'bg-purple-100 text-purple-800'
+                                : u.role === 'ADMIN'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
+                            {u.role}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {branches.find(b => b.id === u.branchId)?.name || 'Sin sucursal'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          onClick={() => setEditingUser(u)}
+                          className="text-sm px-3 py-1"
+                        >
+                          Editar
+                        </Button>
+                        <Button
+                          variant="danger"
+                          onClick={() => handleDeleteUser(u.id)}
+                          className="text-sm px-3 py-1"
+                        >
+                          Eliminar
+                        </Button>
                       </div>
                     </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        u.role === 'MASTER'
-                          ? 'bg-purple-100 text-purple-800'
-                          : u.role === 'ADMIN'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {u.role}
-                    </span>
                   </li>
                 ))}
               </ul>
