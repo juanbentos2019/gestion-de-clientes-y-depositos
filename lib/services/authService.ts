@@ -7,7 +7,7 @@ import {
   getAuth,
   initializeAuth
 } from 'firebase/auth';
-import { initializeApp } from 'firebase/app';
+import { initializeApp, deleteApp } from 'firebase/app';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { User, UserRole } from '@/types';
@@ -82,7 +82,7 @@ export const authService = {
       
       // Cerrar sesión de la instancia secundaria y eliminarla
       await signOut(secondaryAuth);
-      await secondaryApp.delete();
+      await deleteApp(secondaryApp);
       
       // La sesión del usuario actual (MASTER) NO se ve afectada
       
