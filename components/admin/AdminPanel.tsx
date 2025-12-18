@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Branch, UserRole } from '@/types';
 import { Button } from '../ui/Button';
+import { Modal } from '../ui/Modal';
 import { userService } from '@/lib/services/userService';
 import { branchService } from '@/lib/services/branchService';
 import { authService } from '@/lib/services/authService';
@@ -31,6 +32,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     branchId: ''
   });
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  
+  // Modal states
+  const [modal, setModal] = useState<{
+    isOpen: boolean;
+    type: 'success' | 'error' | 'warning' | 'info';
+    title?: string;
+    message: string;
+  }>({ isOpen: false, type: 'info', message: '' });
+
+  const showModal = (type: 'success' | 'error' | 'warning' | 'info', message: string, title?: string) => {
+    setModal({ isOpen: true, type, message, title });
+  };
 
   const canManageBranches = currentUser.role === 'MASTER' || currentUser.role === 'ADMIN';
   const canCreateUsers = currentUser.role === 'MASTER';
@@ -69,10 +82,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       });
       setNewBranchName('');
       await loadData();
-      alert('Sucursal creada exitosamente');
+      showModal('success', `Sucursal "${newBranchName}" creada exitosamente`, '¡Éxito!');
     } catch (error) {
       console.error('Error adding branch:', error);
-      alert('Error al crear sucursal');
+      showModal('error', 'Error al crear sucursal', 'Error');
     }
   };
 
@@ -84,10 +97,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       await branchService.updateBranch(editingBranch.id, { name: editingBranch.name });
       setEditingBranch(null);
       await loadData();
-      alert('Sucursal actualizada');
+      showModal('success', 'Sucursal actualizada correctamente', '¡Éxito!');
     } catch (error) {
       console.error('Error updating branch:', error);
-      alert('Error al actualizar sucursal');
+      showModal('error', 'Error al actualizar sucursal', 'Error');
     }
   };
 
@@ -97,17 +110,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     try {
       await branchService.deleteBranch(id);
       await loadData();
-      alert('Sucursal eliminada');
+      showModal('success', 'Sucursal eliminada correctamente', 'Eliminado');
     } catch (error) {
       console.error('Error deleting branch:', error);
-      alert('Error al eliminar sucursal');
+      showModal('error', 'Error al eliminar sucursal', 'Error');
     }
   };
 
   const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUser.email || !newUser.password || !newUser.username) {
-      alert('Complete todos los campos requeridos');
+      showModal('warning', 'Complete todos los campos requeridos', 'Campos Incompletos');
       return;
     }
 
@@ -129,13 +142,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       });
       
       await loadData();
-      alert('Usuario creado exitosamente');
+      showModal('success', `Usuario "${newUser.username}" creado exitosamente`, '¡Éxito!');
     } catch (error: any) {
       console.error('Error adding user:', error);
       // Mensajes más claros para errores comunes de Firebase Auth
       let msg = 'Error desconocido';
       if (error?.code === 'auth/email-already-in-use') {
-        msg = 'El email ya está registrado. Use otro email o recupere la contraseña.';
+        msg = 'El email ya está registrado.\nUse otro email o recupere la contraseña.';
       } else if (error?.code === 'auth/invalid-email') {
         msg = 'Email inválido';
       } else if (error?.code === 'auth/weak-password') {
@@ -143,7 +156,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       } else if (typeof error?.message === 'string') {
         msg = error.message;
       }
-      alert(`Error al crear usuario:\n\n${msg}`);
+      showModal('error', msg, 'Error al crear usuario');
     }
   };
 
@@ -159,10 +172,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
       });
       setEditingUser(null);
       await loadData();
-      alert('Usuario actualizado');
+      showModal('success', 'Usuario actualizado correctamente', '¡Éxito!');
     } catch (error) {
       console.error('Error updating user:', error);
-      alert('Error al actualizar usuario');
+      showModal('error', 'Error al actualizar usuario', 'Error');
     }
   };
 
@@ -172,10 +185,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
     try {
       await userService.deleteUser(id);
       await loadData();
-      alert('Usuario eliminado');
+      showModal('success', 'Usuario eliminado correctamente', 'Eliminado');
     } catch (error) {
       console.error('Error deleting user:', error);
-      alert('Error al eliminar usuario');
+      showModal('error', 'Error al eliminar usuario', 'Error');
     }
   };
 
@@ -440,6 +453,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
           </div>
         )}
       </div>
+
+      {/* Modal de notificaciones */}
+      <Modal
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        type={modal.type}
+        title={modal.title}
+        message={modal.message}
+      />
     </div>
   );
 };
