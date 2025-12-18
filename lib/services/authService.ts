@@ -3,8 +3,11 @@ import {
   signOut, 
   createUserWithEmailAndPassword,
   updatePassword,
-  User as FirebaseUser
+  User as FirebaseUser,
+  getAuth,
+  initializeAuth
 } from 'firebase/auth';
+import { initializeApp } from 'firebase/app';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import { User, UserRole } from '@/types';
@@ -46,7 +49,26 @@ export const authService = {
     userData: Omit<User, 'id'>
   ): Promise<User> {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      // Verificar que hay un usuario logueado
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        throw new Error('Debe estar logueado para crear usuarios');
+      }
+      
+      // Crear una segunda instancia de Firebase para crear el usuario sin afectar la sesión actual
+      const secondaryApp = initializeApp({
+        apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+        authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+        appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+      }, 'Secondary');
+      
+      const secondaryAuth = getAuth(secondaryApp);
+      
+      // Crear el nuevo usuario con la instancia secundaria
+      const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
       const firebaseUser = userCredential.user;
       
       const newUser: User = {
@@ -55,8 +77,14 @@ export const authService = {
         createdAt: Date.now()
       };
       
-      // Save user data to Firestore
+      // Guardar datos del nuevo usuario en Firestore (usando la BD principal)
       await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+      
+      // Cerrar sesión de la instancia secundaria y eliminarla
+      await signOut(secondaryAuth);
+      await secondaryApp.delete();
+      
+      // La sesión del usuario actual (MASTER) NO se ve afectada
       
       return newUser;
     } catch (error) {
