@@ -241,15 +241,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
         {activeTab === 'branches' && (
           <div className="space-y-6">
             {canManageBranches ? (
-              <form onSubmit={handleAddBranch} className="flex gap-4">
-                <input
-                  required
-                  placeholder="Nombre de Sucursal"
-                  className="flex-1 p-2 border rounded focus:ring-gold-500 focus:border-gold-500"
-                  value={newBranchName}
-                  onChange={(e) => setNewBranchName(e.target.value)}
-                />
-                <Button type="submit">Agregar</Button>
+              <form onSubmit={handleAddBranch} className="bg-gradient-to-r from-gold-50 to-gold-100 border border-gold-200 p-6 rounded-lg space-y-4">
+                <h3 className="font-semibold text-gray-900 text-lg">Crear Sucursal</h3>
+                <div className="space-y-4">
+                  <input
+                    required
+                    placeholder="Nombre de Sucursal"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold-500 focus:border-gold-500"
+                    value={newBranchName}
+                    onChange={(e) => setNewBranchName(e.target.value)}
+                  />
+                  <Button type="submit" className="w-full py-3 text-base font-semibold">
+                    ➕ Crear Sucursal
+                  </Button>
+                </div>
               </form>
             ) : (
               <p className="text-sm text-gray-500 italic">
@@ -276,8 +281,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
               </form>
             )}
 
-            <ul className="space-y-2">
-              {branches.map((b) => (
+            <div>
+              <h3 className="font-semibold text-gray-900 mb-4 text-lg">Sucursales Existentes</h3>
+              <ul className="space-y-2">
+                {branches.map((b) => (
                 <li key={b.id} className="py-3 px-3 bg-white hover:bg-gray-50 rounded-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                   <span className="text-gray-900 font-semibold text-base">{b.name}</span>
                   {canManageBranches && (
@@ -297,10 +304,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ currentUser, onClose }) 
                         🗑️ Eliminar
                       </Button>
                     </div>
-                  )}
+                  ))}
                 </li>
               ))}
-            </ul>
+              </ul>
+            </div>
           </div>
         )}
 
